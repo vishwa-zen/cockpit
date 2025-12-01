@@ -1,79 +1,92 @@
 # FS Cockpit - Unified Diagnostics Platform
 
-## Setup Instructions
+Production-ready IT diagnostics and monitoring platform with Azure AD B2C authentication.
 
-### 1. Install Dependencies
+## Features
+
+✅ **Azure AD B2C Authentication** - Secure enterprise login
+✅ **Real-time Diagnostics** - System health monitoring
+✅ **Ticket Management** - Track and resolve IT issues
+✅ **Unified Search** - Search across users, devices, and tickets
+✅ **Root Cause Analysis** - AI-powered diagnostics
+✅ **Responsive Design** - Works on all devices
+
+## Setup
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
 ```bash
 npm install
 ```
 
-### 2. Run Development Server
+### Development
+
 ```bash
 npm run dev
 ```
 
-The app will run in **DEMO MODE** by default (no Azure AD required).
+Access at: http://localhost:3000
 
-### 3. Configure Azure AD (Optional)
-To enable real authentication, update the `.env` file with your Azure AD credentials:
+### Production Build
 
-```env
-VITE_AZURE_CLIENT_ID=your-actual-client-id
-VITE_AZURE_TENANT_ID=your-actual-tenant-id
-VITE_AZURE_REDIRECT_URI=http://localhost:5173
+```bash
+npm run build
+npm run preview
 ```
 
-**How to get Azure AD credentials:**
-1. Go to [Azure Portal](https://portal.azure.com)
-2. Navigate to Azure Active Directory > App registrations
-3. Create a new registration or use existing one
-4. Copy the Application (client) ID
-5. Copy the Directory (tenant) ID
-6. Add `http://localhost:5173` to Redirect URIs
-7. Update `.env` file with these values
-8. Restart the dev server
+## Azure AD B2C Configuration
 
-Access at: [http://localhost:5173/](http://localhost:5173/)
+The application is configured with:
+- **Client ID**: `64db8b2f-22ad-4ded-86b9-c91a43623f78`
+- **Authority**: `https://zenpoc.b2clogin.com/zenpoc.onmicrosoft.com/B2C_1_NTT_SIGNUP_SIGNIN`
+- **Scopes**: `openid`, `profile`
 
-## Features
+## Environment Variables
 
-✅ **Demo Mode** - Works out of the box without Azure AD
-✅ **MSAL Authentication** - Microsoft Azure Entra AD integration (optional)
-✅ **API Integration** - Axios with interceptors for token management
-✅ **Automatic Fallback** - Mock data when API is unavailable
-✅ **Error Handling** - Comprehensive error handling throughout
-✅ **Session Management** - Secure token storage and logout
+Create a `.env` file:
 
-## Application Flow
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8003/api/v1
+```
 
-1. **Login** (`/login`) - Azure AD authentication
-2. **Dashboard** (`/home`) - View tickets and search
-3. **Search Results** (`/search`) - Filtered tickets
-4. **Issue Details** (`/issue/:id`) - Full diagnostics
+## Tech Stack
 
-## API Endpoints
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Azure MSAL** - Authentication
+- **Tailwind CSS** - Styling
+- **Lucide Icons** - Icon library
+- **Radix UI** - Component primitives
+- **React Router** - Navigation
+- **Axios** - HTTP client
 
-Configure `VITE_API_BASE_URL` in `.env` to point to your backend:
+## Project Structure
 
-- `GET /tickets/my` - Get user's tickets
-- `GET /tickets/:id` - Get ticket details
-- `GET /tickets/search` - Search tickets
-- `GET /diagnostics/:id/root-causes` - Get root cause analysis
-- `GET /diagnostics/:id/actions` - Get recommended actions
-- `GET /system/status` - Get system health status
+```
+src/
+├── components/ui/      # Reusable UI components
+├── config/            # Configuration files
+├── hooks/             # Custom React hooks
+├── screens/           # Page components
+├── services/          # API services
+└── lib/               # Utility functions
+```
 
-## Troubleshooting
+## Deployment
 
-### MSAL Errors
-- Ensure redirect URI matches exactly in Azure AD
-- Check client ID and tenant ID are correct
-- Clear browser cache and sessionStorage
+Build for production:
 
-### API Errors
-- Application falls back to mock data automatically
-- Check browser console for detailed error messages
-- Verify API base URL is correct
+```bash
+npm run build
+```
 
-### Build Errors
-- Run `npm install` to ensure all dependencies are installed
-- Delete `node_modules` and `package-lock.json`, then reinstall
+The `dist/` folder contains the production build ready for deployment.
+
+## License
+
+Proprietary - All rights reserved

@@ -1,9 +1,13 @@
 import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  LogOutIcon,
-  MessageSquareIcon,
-  SearchIcon,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Search,
+  Clock,
+  Monitor,
+  Sparkles,
+  Info,
+  Layers,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -123,7 +127,7 @@ export const IssueSearchSection = (): JSX.Element => {
                   onClick={handleLogout}
                   className="w-full px-4 py-2 text-left hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
-                  <LogOutIcon className="w-4 h-4 text-[#61738d]" />
+                  <LogOut className="w-4 h-4 text-[#61738d]" />
                   <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm">
                     Sign Out
                   </span>
@@ -142,7 +146,7 @@ export const IssueSearchSection = (): JSX.Element => {
                 value="search"
                 className="flex-1 h-full rounded-none data-[state=active]:bg-[#eff6ff] data-[state=active]:border-[#155cfb] data-[state=active]:border data-[state=active]:text-[#1347e5] gap-3.5 px-[35px] py-[11px]"
               >
-                <SearchIcon className="w-4 h-4" />
+                <Search className="w-4 h-4" />
                 <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-sm leading-5">
                   Unified Search
                 </span>
@@ -151,7 +155,7 @@ export const IssueSearchSection = (): JSX.Element => {
                 value="copilot"
                 className="flex-1 h-full rounded-none gap-3.5 px-[82px] py-3"
               >
-                <MessageSquareIcon className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
                 <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-sm leading-5">
                   Copilot
                 </span>
@@ -207,26 +211,18 @@ export const IssueSearchSection = (): JSX.Element => {
                                 {ticket.title}
                               </p>
                             </div>
-                            <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                            <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
                           </div>
 
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1">
-                              <img
-                                className="w-3 h-3"
-                                alt="Clock icon"
-                                src="https://c.animaapp.com/micwvcetKEVWir/img/icon-5.svg"
-                              />
+                              <Clock className="w-3 h-3 text-[#61738d]" />
                               <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
                                 {ticket.time}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <img
-                                className="w-3 h-3"
-                                alt="Device icon"
-                                src="https://c.animaapp.com/micwvcetKEVWir/img/icon-2.svg"
-                              />
+                              <Monitor className="w-3 h-3 text-[#61738d]" />
                               <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
                                 {ticket.device}
                               </span>
@@ -252,11 +248,7 @@ export const IssueSearchSection = (): JSX.Element => {
               <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center gap-6 p-8">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                    <img
-                      className="w-10 h-10"
-                      alt="Copilot Icon"
-                      src="https://c.animaapp.com/micwvcetKEVWir/img/icon-20.svg"
-                    />
+                    <Sparkles className="w-10 h-10 text-blue-600" />
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <h3 className="[font-family:'Arial-Bold',Helvetica] font-bold text-[#314157] text-lg leading-6">
@@ -297,7 +289,7 @@ export const IssueSearchSection = (): JSX.Element => {
                     <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-[13.3px]">
                       {searchType}
                     </span>
-                    <ChevronDownIcon className="w-4 h-4 ml-2" />
+                    <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
                   
                   {showSearchDropdown && (
@@ -369,11 +361,9 @@ export const IssueSearchSection = (): JSX.Element => {
               className="flex flex-col items-center gap-8 translate-y-[-1rem] animate-fade-in opacity-0"
               style={{ "--animation-delay": "200ms" } as React.CSSProperties}
             >
-              <img
-                className="w-24 h-24"
-                alt="Cockpit icon"
-                src="https://c.animaapp.com/micwvcetKEVWir/img/container-10.svg"
-              />
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Layers className="w-12 h-12 text-white" />
+              </div>
               <div className="flex flex-col items-center gap-2">
                 <h3 className="[font-family:'Arial-Bold',Helvetica] font-bold text-[#314157] text-base text-center leading-6">
                   FS Cockpit
@@ -410,14 +400,10 @@ export const IssueSearchSection = (): JSX.Element => {
           </div>
 
           <button className="flex items-center gap-1 transition-opacity hover:opacity-70">
-            <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
+            <span className="font-sans font-normal text-[#61738d] text-xs leading-4">
               Details
             </span>
-            <img
-              className="w-4 h-4"
-              alt="Arrow icon"
-              src="https://c.animaapp.com/micwvcetKEVWir/img/icon-29.svg"
-            />
+            <Info className="w-4 h-4 text-[#61738d]" />
           </button>
       </footer>
     </section>

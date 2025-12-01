@@ -18,15 +18,6 @@ export default defineConfig(({ mode }) => {
       'process.env.VITE_API_BASE_URL': JSON.stringify(
         env.VITE_API_BASE_URL || 'http://127.0.0.1:8003/api/v1'
       ),
-      'process.env.VITE_AZURE_CLIENT_ID': JSON.stringify(
-        env.VITE_AZURE_CLIENT_ID || 'your-client-id-here'
-      ),
-      'process.env.VITE_AZURE_TENANT_ID': JSON.stringify(
-        env.VITE_AZURE_TENANT_ID || 'common'
-      ),
-      'process.env.VITE_AZURE_REDIRECT_URI': JSON.stringify(
-        env.VITE_AZURE_REDIRECT_URI || 'http://localhost:3000'
-      ),
     },
     server: {
       port: 3000,
@@ -42,7 +33,9 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            ui: ['@radix-ui/react-avatar', '@radix-ui/react-progress', '@radix-ui/react-scroll-area'],
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            msal: ['@azure/msal-browser', '@azure/msal-react'],
+            ui: ['@radix-ui/react-avatar', '@radix-ui/react-progress', '@radix-ui/react-scroll-area', '@radix-ui/react-tabs'],
             icons: ['lucide-react'],
           },
         },

@@ -7,20 +7,6 @@ export const useAuth = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Check for demo mode
-    const demoUser = sessionStorage.getItem("demo.user");
-    if (demoUser) {
-      try {
-        const parsedUser = JSON.parse(demoUser);
-        setIsAuthenticated(true);
-        setUser(parsedUser);
-        return;
-      } catch (e) {
-        console.error("Failed to parse demo user", e);
-      }
-    }
-
-    // Check for MSAL accounts
     if (accounts && accounts.length > 0) {
       setIsAuthenticated(true);
       setUser(accounts[0]);
@@ -32,19 +18,13 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      // Clear demo mode
-      sessionStorage.removeItem("demo.user");
-      
-      // Logout from MSAL if authenticated
-      if (accounts && accounts.length > 0) {
-        await instance.logoutPopup();
-      }
-      
-      sessionStorage.clear();
+      await instance.logoutPopup({
+        mainWindowRedirectUri: "/login"
+      });
+      localStorage.clear();
     } catch (error) {
       console.error("Logout failed:", error);
-      // Force clear session even if logout fails
-      sessionStorage.clear();
+      localStorage.clear();
     }
   };
 
