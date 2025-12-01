@@ -30,18 +30,6 @@ import {
 } from "../../../../components/ui/tabs";
 import { ScrollArea } from "../../../../components/ui/scroll-area";
 
-const ticketsData = [
-  {
-    id: "INC0012345",
-    status: "open",
-    statusColor: "bg-[#ffedd4] text-[#c93400] border-transparent",
-    title: "Outlook not responding on LAPTOP-8X7D2K",
-    device: "LAPTOP-8X7D2K",
-    priority: "high",
-    priorityColor: "bg-[#ffe2e2] text-[#c10007] border-[#ffc9c9]",
-    time: "2 hours ago",
-  },
-];
 
 const systemStatusData = [
   { name: "ServiceNow", status: "operational", color: "bg-[#00c950]" },
@@ -54,27 +42,31 @@ export const HomeSearchSection = (): JSX.Element => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredTickets, setFilteredTickets] = useState(ticketsData);
+  const [filteredTickets, setFilteredTickets] = useState<any[]>([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchType, setSearchType] = useState<"User" | "Device" | "Ticket">("Ticket");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState("unified-search");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch tickets on mount
   useEffect(() => {
     const fetchTickets = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const response = await ticketsAPI.getMyTickets();
-        if (response.data && Array.isArray(response.data)) {
+        if (response.success && response.data && Array.isArray(response.data)) {
           setFilteredTickets(response.data);
         } else {
-          setFilteredTickets(ticketsData);
+          setError("Failed to load tickets");
+          setFilteredTickets([]);
         }
       } catch (error) {
         console.error("Failed to fetch tickets:", error);
-        setFilteredTickets(ticketsData);
+        setError("Unable to connect to server");
+        setFilteredTickets([]);
       } finally {
         setIsLoading(false);
       }
@@ -83,22 +75,29 @@ export const HomeSearchSection = (): JSX.Element => {
     fetchTickets();
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      const filtered = ticketsData.filter(
-        (ticket) =>
-          ticket.id.toLowerCase().includes(query) ||
-          ticket.title.toLowerCase().includes(query) ||
-          ticket.device.toLowerCase().includes(query)
-      );
-      setFilteredTickets(filtered);
-      
-      if (filtered.length > 0) {
-        navigate(`/issue/${filtered[0].id}`);
+      setIsLoading(true);
+      try {
+        const response = await ticketsAPI.searchTickets(searchQuery, searchType);
+        if (response.success && response.data) {
+          setFilteredTickets(response.data);
+          
+          if (response.data.length > 0) {
+            navigate(`/issue/${response.data[0].id}`);
+          }
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setIsLoading(false);
       }
     } else {
-      setFilteredTickets(ticketsData);
+      // Reload all tickets
+      const response = await ticketsAPI.getMyTickets();
+      if (response.success) {
+        setFilteredTickets(response.data);
+      }
     }
   };
 
@@ -212,10 +211,23 @@ export const HomeSearchSection = (): JSX.Element => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 space-y-4">
-                    {filteredTickets.length === 0 ? (
+                    {isLoading ? (
                       <div className="text-center py-8">
-                        <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-sm">
-                          No tickets found matching your search
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="font-sans font-normal text-[#61738d] text-sm mt-2">
+                          Loading tickets...
+                        </p>
+                      </div>
+                    ) : error ? (
+                      <div className="text-center py-8">
+                        <p className="font-sans font-normal text-red-600 text-sm">
+                          {error}
+                        </p>
+                      </div>
+                    ) : filteredTickets.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="font-sans font-normal text-[#61738d] text-sm">
+                          No tickets found
                         </p>
                       </div>
                     ) : (
@@ -227,7 +239,7 @@ export const HomeSearchSection = (): JSX.Element => {
                       >
                         <div className="flex flex-col gap-1">
                           <div className="flex items-end gap-2">
-                            <span className="[font-family:'Consolas-Regular',Helvetica] font-normal text-[#155cfb] text-sm leading-normal">
+                            <span className="font-mono font-normal text-[#155cfb] text-sm leading-normal">
                               {ticket.id}
                             </span>
                             <Badge
@@ -236,13 +248,13 @@ export const HomeSearchSection = (): JSX.Element => {
                               {ticket.status}
                             </Badge>
                           </div>
-                          <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm leading-5">
+                          <p className="font-sans font-normal text-[#0e162b] text-sm leading-5">
                             {ticket.title}
                           </p>
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1">
                               <MonitorIcon className="w-3 h-3 text-[#61738d]" />
-                              <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
+                              <span className="font-sans font-normal text-[#61738d] text-xs leading-4">
                                 {ticket.device}
                               </span>
                             </div>
