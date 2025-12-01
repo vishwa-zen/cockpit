@@ -4,12 +4,13 @@ Production-ready IT diagnostics and monitoring platform with Azure AD B2C authen
 
 ## Features
 
-✅ **Azure AD B2C Authentication** - Secure enterprise login
+✅ **Azure AD B2C Authentication** - Secure enterprise login with fallback demo mode
 ✅ **Real-time Diagnostics** - System health monitoring
-✅ **Ticket Management** - Track and resolve IT issues
+✅ **Ticket Management** - Track and resolve IT issues with mock data fallback
 ✅ **Unified Search** - Search across users, devices, and tickets
 ✅ **Root Cause Analysis** - AI-powered diagnostics
 ✅ **Responsive Design** - Works on all devices
+✅ **Offline Mode** - Works with mock data when API is unavailable
 
 ## Setup
 
