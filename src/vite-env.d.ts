@@ -1,19 +1,12 @@
 /// <reference types="vite/client" />
 
-declare global {
-  interface Window {
-    __ENV__?: {
-      VITE_API_BASE_URL?: string;
-      DEV?: boolean;
-    };
-  }
+interface ImportMetaEnv {
+  readonly VITE_AZURE_CLIENT_ID: string
+  readonly VITE_AZURE_TENANT_ID: string
+  readonly VITE_AZURE_REDIRECT_URI: string
+  readonly VITE_API_BASE_URL: string
 }
 
-declare namespace NodeJS {
-  interface ProcessEnv {
-    VITE_API_BASE_URL?: string;
-    NODE_ENV?: 'development' | 'production' | 'test';
-  }
+interface ImportMeta {
+  readonly env: ImportMetaEnv
 }
-
-export {};

@@ -2,17 +2,11 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   LogOutIcon,
-  Bot,
+  MessageSquareIcon,
   SearchIcon,
-  ClockIcon,
-  MonitorIcon,
-  Command,
-  TicketIcon,
-  InfoIcon,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMsal } from "@azure/msal-react";
 import { Avatar, AvatarFallback } from "../../../../components/ui/avatar";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
@@ -23,8 +17,19 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../../components/ui/tabs";
-import { MockDataToggle } from "../../../../components/ui/mock-data-toggle";
-import { serviceNowService, type Ticket } from "../../../../services/serviceNowService";
+
+const tickets = [
+  {
+    id: "INC0012345",
+    status: "open",
+    statusColor: "bg-[#ffedd4] text-[#c93400] border-transparent",
+    title: "Outlook not responding on LAPTOP-8X7D2K",
+    time: "2 hours ago",
+    device: "LAPTOP-8X7D2K",
+    priority: "high",
+    priorityColor: "bg-[#ffe2e2] text-[#c10007] border-[#ffc9c9]",
+  },
+];
 
 const systemStatuses = [
   { name: "ServiceNow", status: "online", color: "bg-[#00c950]" },
@@ -35,90 +40,50 @@ const systemStatuses = [
 
 export const IssueSearchSection = (): JSX.Element => {
   const navigate = useNavigate();
-  const { instance, accounts } = useMsal();
   const [searchQuery, setSearchQuery] = useState("INC0012");
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [filteredTickets, setFilteredTickets] = useState(tickets);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchType, setSearchType] = useState<"User" | "Device" | "Ticket">("Ticket");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState("search");
 
-  const activeAccount = accounts[0];
-  const userName = activeAccount?.name || "User";
-  const userEmail = activeAccount?.username || "user@company.com";
-  const userInitials = activeAccount?.name 
-    ? activeAccount.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-    : "U";
-
-  useEffect(() => {
-    loadAndSearchTickets();
-  }, []);
-
-  const loadAndSearchTickets = async () => {
-    setLoading(true);
-    try {
-      const results = await serviceNowService.searchIncidents(searchQuery);
-      setTickets(results);
-      setFilteredTickets(results);
-    } catch (error) {
-      console.error("Failed to load tickets:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleTicketClick = (ticketId: string) => {
     navigate(`/issue/${ticketId}`);
   };
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     if (searchQuery.trim()) {
-      setLoading(true);
-      try {
-        const results = await serviceNowService.searchIncidents(searchQuery);
-        setFilteredTickets(results);
-        
-        if (results.length > 0) {
-          navigate(`/issue/${results[0].id}`);
-        }
-      } catch (error) {
-        console.error("Search failed:", error);
-      } finally {
-        setLoading(false);
+      const query = searchQuery.toLowerCase();
+      const filtered = tickets.filter(
+        (ticket) =>
+          ticket.id.toLowerCase().includes(query) ||
+          ticket.title.toLowerCase().includes(query) ||
+          ticket.device.toLowerCase().includes(query)
+      );
+      setFilteredTickets(filtered);
+      
+      if (filtered.length > 0) {
+        navigate(`/issue/${filtered[0].id}`);
       }
     } else {
       setFilteredTickets(tickets);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("refresh_token");
-      
-      await instance.logoutPopup({
-        postLogoutRedirectUri: window.location.origin,
-        mainWindowRedirectUri: window.location.origin
-      });
-      
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      window.location.href = "/login";
-    }
+  const handleLogout = () => {
+    navigate("/login");
   };
 
   return (
     <section className="relative w-full h-screen flex flex-col bg-[linear-gradient(135deg,rgba(248,250,252,1)_0%,rgba(239,246,255,0.3)_50%,rgba(241,245,249,1)_100%),linear-gradient(0deg,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_100%)]">
-      <MockDataToggle />
       <header className="flex flex-col items-start pt-4 pb-[0.67px] px-8 bg-[#ffffffcc] border-b-[0.67px] border-[#e1e8f0] flex-shrink-0">
         <div className="flex h-10 items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
-              <Command className="w-6 h-6 text-white" />
-            </div>
+            <img
+              className="w-16 h-16 mt-[-2.00px] mb-[-22.00px] ml-[-12.00px]"
+              alt="Container"
+              src="https://c.animaapp.com/micwvcetKEVWir/img/container-9.svg"
+            />
             <div className="flex flex-col">
               <div className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-base leading-6">
                 FS Cockpit
@@ -129,44 +94,42 @@ export const IssueSearchSection = (): JSX.Element => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 relative z-50">
-            <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#45556c] text-xs leading-4 select-none">
-              {userEmail}
-            </span>
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="relative focus:outline-none block"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2b7fff] to-[#ad46ff] flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-                  <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-xs">
-                    {userInitials}
-                  </span>
-                </div>
-              </button>
-              
-              {showUserMenu && (
-                <div className="absolute top-10 right-0 w-48 bg-white rounded-lg shadow-[0px_4px_12px_rgba(0,0,0,0.1)] border border-[#e1e8f0] py-2 mt-2 z-50">
-                  <div className="px-4 py-2 border-b border-[#e1e8f0]">
-                    <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm truncate">
-                      {userName}
-                    </p>
-                    <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs truncate">
-                      {userEmail}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left hover:bg-slate-50 transition-colors flex items-center gap-2 text-[#0e162b]"
-                  >
-                    <LogOutIcon className="w-4 h-4 text-[#61738d]" />
-                    <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-sm">
-                      Sign Out
-                    </span>
-                  </button>
-                </div>
-              )}
+          <div className="flex items-center gap-3 relative">
+            <div className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#45556c] text-xs leading-4">
+              john.doe@company.com
             </div>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="relative"
+            >
+              <Avatar className="w-8 h-8 bg-[linear-gradient(135deg,rgba(43,127,255,1)_0%,rgba(173,70,255,1)_100%)] cursor-pointer hover:opacity-80 transition-opacity">
+                <AvatarFallback className="bg-transparent text-white text-xs [font-family:'Arial-Regular',Helvetica]">
+                  J
+                </AvatarFallback>
+              </Avatar>
+            </button>
+            
+            {showUserMenu && (
+              <div className="absolute top-12 right-0 w-48 bg-white rounded-lg shadow-lg border border-[#e1e8f0] py-2 z-50">
+                <div className="px-4 py-2 border-b border-[#e1e8f0]">
+                  <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm">
+                    John Doe
+                  </p>
+                  <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs">
+                    john.doe@company.com
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <LogOutIcon className="w-4 h-4 text-[#61738d]" />
+                  <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm">
+                    Sign Out
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -188,7 +151,7 @@ export const IssueSearchSection = (): JSX.Element => {
                 value="copilot"
                 className="flex-1 h-full rounded-none gap-3.5 px-[82px] py-3"
               >
-                <Bot className="w-4 h-4" />
+                <MessageSquareIcon className="w-4 h-4" />
                 <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-sm leading-5">
                   Copilot
                 </span>
@@ -198,28 +161,17 @@ export const IssueSearchSection = (): JSX.Element => {
             <TabsContent value="search" className="m-0 flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto">
                 <div className="flex flex-col gap-4 p-4">
-                <Card className="border-[0.67px] border-[#e1e8f0] shadow-[0px_4px_6px_-4px_#0000001a,0px_10px_15px_-3px_#0000001a] rounded-[14px]">
-                  <CardContent className="pt-3 pb-[0.67px] px-4 border-b-[0.67px] border-[#e1e8f0] bg-[linear-gradient(90deg,rgba(248,250,252,1)_0%,rgba(239,246,255,1)_100%)]">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TicketIcon className="w-4 h-4 text-[#0e162b]" />
-                      <h2 className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-sm leading-5">
-                        Filtered Results
-                      </h2>
-                    </div>
-                    <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4 pb-3">
-                      Active and recent tickets requiring attention
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="flex flex-col gap-1">
+                  <h2 className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#0e162b] text-base leading-6">
+                    Filtered Results
+                  </h2>
+                  <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-sm leading-5">
+                    Active and recent tickets requiring attention
+                  </p>
+                </div>
 
                 <div className="flex flex-col gap-3">
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-sm">
-                        Loading tickets...
-                      </p>
-                    </div>
-                  ) : filteredTickets.length === 0 ? (
+                  {filteredTickets.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-sm">
                         No tickets found matching your search
@@ -230,15 +182,20 @@ export const IssueSearchSection = (): JSX.Element => {
                     <Card
                       key={ticket.id}
                       onClick={() => handleTicketClick(ticket.id)}
-                      className="border-[0.67px] border-[#0000001a] rounded-[14px] cursor-pointer hover:shadow-lg transition-shadow"
+                      className="border-[0.67px] border-[#0000001a] rounded-[14px] translate-y-[-1rem] animate-fade-in opacity-0 cursor-pointer hover:shadow-lg transition-shadow"
+                      style={
+                        {
+                          "--animation-delay": `${index * 100}ms`,
+                        } as React.CSSProperties
+                      }
                     >
                       <CardContent className="p-4">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start justify-between">
-                            <div className="flex flex-col gap-1.5 flex-1">
+                            <div className="flex flex-col gap-1 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="[font-family:'Consolas-Regular',Helvetica] font-normal text-[#155cfb] text-sm leading-5">
-                                  {ticket.incidentNumber}
+                                  {ticket.id}
                                 </span>
                                 <Badge
                                   className={`${ticket.statusColor} h-auto px-2 py-0.5 text-xs [font-family:'Arial-Regular',Helvetica] font-normal leading-4 border-[0.67px]`}
@@ -250,18 +207,26 @@ export const IssueSearchSection = (): JSX.Element => {
                                 {ticket.title}
                               </p>
                             </div>
-                            <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
+                            <ChevronRightIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
                           </div>
 
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1">
-                              <ClockIcon className="w-3 h-3 text-[#61738d]" />
+                              <img
+                                className="w-3 h-3"
+                                alt="Clock icon"
+                                src="https://c.animaapp.com/micwvcetKEVWir/img/icon-5.svg"
+                              />
                               <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
-                                {ticket.timeAgo}
+                                {ticket.time}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <MonitorIcon className="w-3 h-3 text-[#61738d]" />
+                              <img
+                                className="w-3 h-3"
+                                alt="Device icon"
+                                src="https://c.animaapp.com/micwvcetKEVWir/img/icon-2.svg"
+                              />
                               <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
                                 {ticket.device}
                               </span>
@@ -378,7 +343,11 @@ export const IssueSearchSection = (): JSX.Element => {
               style={{ "--animation-delay": "200ms" } as React.CSSProperties}
             >
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                <Bot className="w-12 h-12 text-blue-600" />
+                <img
+                  className="w-12 h-12"
+                  alt="Copilot Icon"
+                  src="https://c.animaapp.com/micwvcetKEVWir/img/icon-20.svg"
+                />
               </div>
               <div className="flex flex-col items-center gap-2">
                 <h3 className="[font-family:'Arial-Bold',Helvetica] font-bold text-[#314157] text-lg text-center leading-6">
@@ -400,9 +369,11 @@ export const IssueSearchSection = (): JSX.Element => {
               className="flex flex-col items-center gap-8 translate-y-[-1rem] animate-fade-in opacity-0"
               style={{ "--animation-delay": "200ms" } as React.CSSProperties}
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <SearchIcon className="w-12 h-12 text-white" />
-              </div>
+              <img
+                className="w-24 h-24"
+                alt="Cockpit icon"
+                src="https://c.animaapp.com/micwvcetKEVWir/img/container-10.svg"
+              />
               <div className="flex flex-col items-center gap-2">
                 <h3 className="[font-family:'Arial-Bold',Helvetica] font-bold text-[#314157] text-base text-center leading-6">
                   FS Cockpit
@@ -438,12 +409,16 @@ export const IssueSearchSection = (): JSX.Element => {
             </div>
           </div>
 
-        <button className="flex items-center gap-1 transition-opacity hover:opacity-70">
-          <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
-            Details
-          </span>
-          <InfoIcon className="w-4 h-4 text-[#61738d]" />
-        </button>
+          <button className="flex items-center gap-1 transition-opacity hover:opacity-70">
+            <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#61738d] text-xs leading-4">
+              Details
+            </span>
+            <img
+              className="w-4 h-4"
+              alt="Arrow icon"
+              src="https://c.animaapp.com/micwvcetKEVWir/img/icon-29.svg"
+            />
+          </button>
       </footer>
     </section>
   );

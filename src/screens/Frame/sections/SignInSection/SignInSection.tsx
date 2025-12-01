@@ -1,33 +1,30 @@
-import { 
-  ChevronRightIcon, 
-  InfoIcon, 
-  Loader2, 
-  Command, 
-  BrainCircuit, 
-  Activity, 
-  Network, 
-  ShieldCheck 
-} from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { useMsal } from "@azure/msal-react";
+import { ChevronRightIcon, InfoIcon } from "lucide-react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMsal, useIsAuthenticated } from "@azure/msal-react";
-import { loginRequest } from "../../../../config/authConfig";
+import { loginRequest } from "../../../../config/msalConfig";
 import { Alert, AlertDescription } from "../../../../components/ui/alert";
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { toast } from "../../../../hooks/use-toast";
+
+// Environment variable declaration
+declare const process: {
+  env: {
+    VITE_AZURE_CLIENT_ID?: string;
+  };
+};
 
 const features = [
   {
-    Icon: BrainCircuit,
+    icon: "https://c.animaapp.com/micwvcetKEVWir/img/container-6.svg",
     text: "Intelligent Diagnostics",
   },
   {
-    Icon: Activity,
+    icon: "https://c.animaapp.com/micwvcetKEVWir/img/container-8.svg",
     text: "Real-Time System Insights",
   },
   {
-    Icon: Network,
+    icon: "https://c.animaapp.com/micwvcetKEVWir/img/container-13.svg",
     text: "Unified IT Operations",
   },
 ];
@@ -35,82 +32,42 @@ const features = [
 export const SignInSection = (): JSX.Element => {
   const navigate = useNavigate();
   const { instance } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/home");
-    }
-  }, [isAuthenticated, navigate]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
-    if (!instance) {
-      toast({
-        title: "Configuration Error",
-        description: "Authentication service is not initialized.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
+    setError(null);
+    
     try {
-      // Try popup login first
-      await instance.loginPopup(loginRequest);
-      
-      // Check if login was successful
-      const account = instance.getActiveAccount();
-      if (account) {
-        toast({
-          title: "Welcome back!",
-          description: `Signed in as ${account.name}`,
-          variant: "success",
-        });
+      // Check if MSAL is configured properly
+      const clientId = typeof process !== 'undefined' && process.env?.VITE_AZURE_CLIENT_ID 
+        ? process.env.VITE_AZURE_CLIENT_ID 
+        : 'your-client-id-here';
+        
+      if (!clientId || clientId === 'your-client-id-here') {
+        console.warn("Azure AD not configured, using demo mode");
+        // Demo mode - skip actual authentication
+        sessionStorage.setItem("demo.user", JSON.stringify({
+          username: "john.doe@company.com",
+          name: "John Doe"
+        }));
         navigate("/home");
+        return;
       }
-    } catch (error: any) {
-      console.error("Popup login failed:", error);
-      
-      // If popup fails (e.g. blocked), try redirect
-      if (error.name === "BrowserAuthError" && (error.message.includes("popup_window_error") || error.message.includes("empty_window_error"))) {
-         try {
-             await instance.loginRedirect(loginRequest);
-             return; // loginRedirect will reload the page
-         } catch (redirectError: any) {
-             console.error("Redirect login failed:", redirectError);
-             toast({
-                title: "Sign in failed",
-                description: redirectError.message || "Could not sign in. Please check console for details.",
-                variant: "destructive",
-              });
-         }
-      } else {
-          console.error("Login error:", error);
-          
-          // Always allow fallback in dev/preview environments if auth fails
-          // This ensures you never get stuck
-          if (window.location.hostname.includes("webcontainer") || 
-              window.location.hostname.includes("localhost") || 
-              window.location.hostname.includes("127.0.0.1")) {
-             
-             toast({
-                title: "Preview Mode Access",
-                description: "Authentication unavailable in this environment. Entering guest mode.",
-                variant: "warning",
-              });
-              
-              // Immediate redirect
-              navigate("/home");
-              return;
-          }
 
-          toast({
-            title: "Sign in failed",
-            description: error.message || "Could not sign in with Microsoft. Please try again.",
-            variant: "destructive",
-          });
+      const response = await instance.loginPopup(loginRequest);
+      
+      // Store token
+      if (response.accessToken) {
+        sessionStorage.setItem("msal.token", response.accessToken);
+        sessionStorage.setItem("msal.account", JSON.stringify(response.account));
       }
+      
+      navigate("/home");
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setError(err.message || "Authentication failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -122,12 +79,14 @@ export const SignInSection = (): JSX.Element => {
         <div className="relative w-full max-w-[1024px] grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="relative flex flex-col gap-6 translate-y-[-1rem] animate-fade-in opacity-0 [--animation-delay:0ms]">
             <div className="relative">
-              <div className="absolute top-[-13px] left-[-38px] w-[156px] h-[156px] flex items-center justify-center opacity-10">
-                <Command className="w-full h-full text-white" />
-              </div>
+              <img
+                className="absolute top-[-13px] left-[-38px] w-[156px] h-[156px]"
+                alt="Container"
+                src="https://c.animaapp.com/micwvcetKEVWir/img/container.svg"
+              />
             </div>
 
-            <div className="flex flex-col gap-4 pt-[90px] relative z-10">
+            <div className="flex flex-col gap-4 pt-[90px]">
               <h1 className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-5xl tracking-[0] leading-[48px]">
                 FS Cockpit
               </h1>
@@ -140,9 +99,11 @@ export const SignInSection = (): JSX.Element => {
             <div className="flex flex-col gap-4 translate-y-[-1rem] animate-fade-in opacity-0 [--animation-delay:200ms]">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                    <feature.Icon className="w-5 h-5 text-white" />
-                  </div>
+                  <img
+                    className="w-10 h-10"
+                    alt="Feature icon"
+                    src={feature.icon}
+                  />
                   <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-[#daeafe] text-sm tracking-[0] leading-5">
                     {feature.text}
                   </span>
@@ -162,29 +123,33 @@ export const SignInSection = (): JSX.Element => {
                 </p>
               </header>
 
+              {error && (
+                <Alert className="bg-red-50 border-red-200 mb-4">
+                  <AlertDescription className="text-red-800">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Button 
                 onClick={handleSignIn}
                 disabled={isLoading}
-                className="h-14 bg-[#155dfc] hover:bg-[#1250dc] rounded-lg justify-start gap-3 px-3 transition-colors disabled:opacity-70 w-full"
+                className="h-14 bg-[#155dfc] hover:bg-[#1250dc] rounded-lg justify-start gap-3 px-3 transition-colors disabled:opacity-50"
               >
-                {isLoading ? (
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-md">
-                    <ShieldCheck className="w-6 h-6 text-white" />
-                  </div>
-                )}
+                <img
+                  className="w-10 h-10"
+                  alt="Login screen"
+                  src="https://c.animaapp.com/micwvcetKEVWir/img/loginscreen.svg"
+                />
                 <div className="flex flex-col items-start flex-1">
-                  <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-sm tracking-[0] leading-5">
-                    {isLoading ? "Signing in..." : "Sign in with"}
-                  </span>
+                <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-sm tracking-[0] leading-5">
+                  {isLoading ? "Signing in..." : "Sign in with"}
+                </span>
                   <span className="[font-family:'Arial-Regular',Helvetica] font-normal text-white text-xs tracking-[0] leading-4 opacity-90">
                     Microsoft Azure Entra AD
                   </span>
                 </div>
-                {!isLoading && <ChevronRightIcon className="w-4 h-4 text-white" />}
+                <ChevronRightIcon className="w-4 h-4 text-white" />
               </Button>
 
               <Alert className="bg-[#eff6ff] border-[#bddaff] rounded-[10px]">
@@ -205,24 +170,6 @@ export const SignInSection = (): JSX.Element => {
                 By signing in, you agree to our Terms of Service and Privacy
                 Policy
               </p>
-              
-              {/* Always show Guest Login in Preview Mode */}
-              <div className="pt-4 border-t border-slate-100 w-full">
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    toast({
-                      title: "Guest Access",
-                      description: "Entering dashboard in preview mode.",
-                      variant: "info",
-                    });
-                    navigate("/home");
-                  }}
-                  className="w-full text-xs h-10 border-dashed text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                >
-                  Continue as Guest (Skip Login)
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
