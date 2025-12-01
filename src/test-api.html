@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #155cfb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1250dc;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #065f46;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #991b1b;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #1e40af;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Connection Test</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Direct API Call</h2>
+        <p>Tests direct connection to: <code>http://127.0.0.1:8003/api/v1/servicenow/technician/FS_Cockpit_Integration/incidents</code></p>
+        <button onclick="testDirectAPI()">Run Test</button>
+        <div id="direct-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Proxy API Call</h2>
+        <p>Tests connection through Vite proxy: <code>/api/v1/servicenow/technician/FS_Cockpit_Integration/incidents</code></p>
+        <button onclick="testProxyAPI()">Run Test</button>
+        <div id="proxy-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: CORS Check</h2>
+        <p>Checks if CORS headers are properly configured</p>
+        <button onclick="testCORS()">Run Test</button>
+        <div id="cors-result"></div>
+    </div>
+
+    <script>
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8003/api/v1/servicenow/technician/FS_Cockpit_Integration/incidents');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Success!
+                        Status: ${response.status}
+                        Incidents: ${data.data?.incidents?.length || 0}
+                        
+                        Response:
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Failed!
+                        Error: ${error.message}
+                        
+                        This usually means:
+                        1. API server is not running on port 8003
+                        2. CORS is blocking the request
+                        3. Network/firewall issue
+                    </div>
+                `;
+            }
+        }
+
+        async function testProxyAPI() {
+            const resultDiv = document.getElementById('proxy-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            
+            try {
+                const response = await fetch('/api/v1/servicenow/technician/FS_Cockpit_Integration/incidents');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Success!
+                        Status: ${response.status}
+                        Incidents: ${data.data?.incidents?.length || 0}
+                        
+                        Response:
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Failed!
+                        Error: ${error.message}
+                        
+                        This usually means:
+                        1. Vite dev server proxy is not configured correctly
+                        2. API server is not running
+                        3. Proxy target URL is incorrect
+                    </div>
+                `;
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('cors-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8003/api/v1/servicenow/technician/FS_Cockpit_Integration/incidents', {
+                    method: 'OPTIONS'
+                });
+                
+                const headers = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ CORS Headers Found!
+                        
+                        ${JSON.stringify(headers, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ CORS Check Failed!
+                        Error: ${error.message}
+                        
+                        Your API needs these headers:
+                        Access-Control-Allow-Origin: *
+                        Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+                        Access-Control-Allow-Headers: Content-Type, Authorization
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

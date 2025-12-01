@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="FS Cockpit - Unified Diagnostics Platform for IT Excellence" />
+    <meta name="author" content="FS Cockpit Team" />
+    <title>FS Cockpit - Unified Diagnostics Platform</title>
+    <link href="tailwind.css" rel="stylesheet" />
+    <script>
+      // Initialize environment variables before app loads
+      window.__ENV__ = {
+        VITE_API_BASE_URL: 'http://127.0.0.1:8003/api/v1',
+        DEV: true
+      };
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./src/index.tsx"></script>
+  </body>
+</html>
